@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Excel → JSON Pro</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 p-8">
+  <div class="max-w-6xl mx-auto">
+    <!-- Header -->
+    <div class="text-center mb-8">
+      <h1 class="text-5xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent mb-3">
+        📊 Excel → JSON Pro
+      </h1>
+      <p class="text-gray-600 text-lg">
+        Gère les tableaux complexes et les en-têtes multiples
+      </p>
+    </div>
+
+    <!-- Upload Section -->
+    <div class="bg-white rounded-2xl shadow-xl p-8 mb-6 border border-gray-200">
+      <div class="border-2 border-dashed border-purple-300 rounded-xl p-10 text-center hover:border-purple-500 hover:bg-purple-50 transition-all cursor-pointer">
+        <input
+          type="file"
+          accept=".xlsx,.xls"
+          id="fileInput"
+          class="hidden"
+        />
+        <label for="fileInput" class="cursor-pointer block">
+          <div class="text-7xl mb-4">📁</div>
+          <div class="text-xl font-bold text-gray-800 mb-2">
+            Glissez votre fichier Excel ici
+          </div>
+          <div class="text-sm text-gray-500">
+            ou cliquez pour sélectionner (.xlsx, .xls)
+          </div>
+          <div class="mt-3 text-xs text-gray-400">
+            ✨ Détection automatique des en-têtes
+          </div>
+        </label>
+      </div>
+
+      <div id="processingMsg" class="mt-6 text-center hidden">
+        <div class="inline-flex items-center gap-3 bg-purple-100 text-purple-700 px-6 py-3 rounded-full font-semibold">
+          <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-purple-700"></div>
+          Analyse en cours...
+        </div>
+      </div>
+
+      <div id="errorMsg" class="mt-6 bg-red-50 border-l-4 border-red-500 rounded-lg p-4 hidden">
+        <div class="flex items-center gap-2 text-red-700 font-semibold">
+          <span class="text-2xl">❌</span>
+          <span id="errorText"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Results Section -->
+    <div id="resultsSection" class="bg-white rounded-2xl shadow-xl p-8 border border-gray-200 hidden">
+      <div class="flex items-center justify-between mb-6">
+        <div>
+          <h2 class="text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+            ✨ Résultat
+          </h2>
+          <p class="text-sm text-gray-500 mt-1" id="headerInfo"></p>
+        </div>
+        <div class="flex gap-3">
+          <button
+            id="copyBtn"
+            class="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-6 py-3 rounded-xl font-semibold transition-all shadow-lg hover:shadow-xl flex items-center gap-2"
+          >
+            <span class="text-xl">📋</span> Copier
+          </button>
+          <button
+            id="downloadBtn"
+            class="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white px-6 py-3 rounded-xl font-semibold transition-all shadow-lg hover:shadow-xl flex items-center gap-2"
+          >
+            <span class="text-xl">💾</span> Télécharger
+          </button>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="grid grid-cols-3 gap-4 mb-6">
+        <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4 border border-blue-200">
+          <div class="text-blue-600 text-sm font-semibold mb-1">📊 Lignes</div>
+          <div class="text-3xl font-bold text-blue-900" id="rowCount">0</div>
+        </div>
+        <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-4 border border-purple-200">
+          <div class="text-purple-600 text-sm font-semibold mb-1">📝 Colonnes</div>
+          <div class="text-3xl font-bold text-purple-900" id="colCount">0</div>
+        </div>
+        <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-4 border border-green-200">
+          <div class="text-green-600 text-sm font-semibold mb-1">✅ Statut</div>
+          <div class="text-lg font-bold text-green-900">Prêt</div>
+        </div>
+      </div>
+
+      <!-- Colonnes détectées -->
+      <div class="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-4 border border-indigo-200 mb-6">
+        <div class="text-sm font-bold text-indigo-900 mb-3" id="columnsTitle"></div>
+        <div class="flex flex-wrap gap-2 max-h-40 overflow-y-auto" id="columnsList"></div>
+      </div>
+
+      <!-- Preview première ligne -->
+      <div class="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl p-5 border border-blue-200 mb-6">
+        <div class="text-sm font-bold text-blue-900 mb-3 flex items-center gap-2">
+          <span class="text-xl">👁️</span>
+          Aperçu de la première ligne :
+        </div>
+        <pre class="text-xs text-blue-800 overflow-x-auto bg-white p-4 rounded-lg border border-blue-100 max-h-60" id="previewJson"></pre>
+      </div>
+
+      <!-- JSON complet -->
+      <div class="rounded-xl overflow-hidden border border-gray-700 shadow-lg">
+        <div class="bg-gray-800 px-4 py-2 flex items-center justify-between">
+          <span class="text-green-400 text-sm font-mono font-semibold">💻 JSON Complet</span>
+          <span class="text-gray-400 text-xs" id="jsonFileName"></span>
+        </div>
+        <div class="bg-gray-900 p-4 overflow-auto max-h-96">
+          <pre class="text-sm text-green-400 font-mono" id="fullJson"></pre>
+        </div>
+      </div>
+
+      <!-- Instructions -->
+      <div class="mt-6 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-6 border-2 border-green-200">
+        <h3 class="font-bold text-green-900 mb-4 flex items-center gap-2 text-lg">
+          <span class="text-2xl">🎯</span>
+          Prochaines étapes
+        </h3>
+        
+        <ol class="space-y-3">
+          <li class="flex items-start gap-3">
+            <span class="bg-green-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold flex-shrink-0">1</span>
+            <div>
+              <div class="font-semibold text-green-900">Téléchargez le fichier JSON</div>
+              <div class="text-sm text-green-700">Cliquez sur "💾 Télécharger"</div>
+            </div>
+          </li>
+          <li class="flex items-start gap-3">
+            <span class="bg-green-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold flex-shrink-0">2</span>
+            <div>
+              <div class="font-semibold text-green-900">Placez-le dans <code class="bg-green-100 px-2 py-0.5 rounded">data/</code></div>
+              <div class="text-sm text-green-700">À la racine de votre projet Python</div>
+            </div>
+          </li>
+          <li class="flex items-start gap-3">
+            <span class="bg-green-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold flex-shrink-0">3</span>
+            <div>
+              <div class="font-semibold text-green-900">Lancez : <code class="bg-green-100 px-2 py-0.5 rounded">python app.py</code></div>
+              <div class="text-sm text-green-700">Import automatique dans MySQL</div>
+            </div>
+          </li>
+        </ol>
+      </div>
+    </div>
+
+    <!-- Info Box -->
+    <div id="infoBox" class="bg-white rounded-2xl shadow-xl p-8 border border-gray-200">
+      <h3 class="font-bold text-gray-800 mb-4 text-xl flex items-center gap-2">
+        <span class="text-2xl">📌</span>
+        Fonctionnalités intelligentes
+      </h3>
+      
+      <div class="grid md:grid-cols-2 gap-4">
+        <div class="bg-blue-50 rounded-xl p-4 border border-blue-200">
+          <div class="text-2xl mb-2">🎯</div>
+          <div class="font-semibold text-blue-900 mb-1">Détection auto des en-têtes</div>
+          <div class="text-sm text-blue-700">
+            Trouve automatiquement la ligne d'en-tête même dans des tableaux complexes
+          </div>
+        </div>
+        
+        <div class="bg-purple-50 rounded-xl p-4 border border-purple-200">
+          <div class="text-2xl mb-2">🧹</div>
+          <div class="font-semibold text-purple-900 mb-1">Nettoyage intelligent</div>
+          <div class="text-sm text-purple-700">
+            Ignore les lignes vides et gère les cellules fusionnées
+          </div>
+        </div>
+        
+        <div class="bg-green-50 rounded-xl p-4 border border-green-200">
+          <div class="text-2xl mb-2">📋</div>
+          <div class="font-semibold text-green-900 mb-1">Noms de colonnes auto</div>
+          <div class="text-sm text-green-700">
+            Génère "Colonne_1", "Colonne_2" pour les colonnes sans nom
+          </div>
+        </div>
+        
+        <div class="bg-orange-50 rounded-xl p-4 border border-orange-200">
+          <div class="text-2xl mb-2">⚡</div>
+          <div class="font-semibold text-orange-900 mb-1">Compatible MySQL</div>
+          <div class="text-sm text-orange-700">
+            Format JSON prêt pour l'import automatique
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let jsonData = null;
+    let fileName = '';
+
+    const fileInput = document.getElementById('fileInput');
+    const processingMsg = document.getElementById('processingMsg');
+    const errorMsg = document.getElementById('errorMsg');
+    const errorText = document.getElementById('errorText');
+    const resultsSection = document.getElementById('resultsSection');
+    const infoBox = document.getElementById('infoBox');
+
+    fileInput.addEventListener('change', handleFileUpload);
+    document.getElementById('copyBtn').addEventListener('click', copyToClipboard);
+    document.getElementById('downloadBtn').addEventListener('click', downloadJson);
+
+    async function handleFileUpload(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      fileName = file.name;
+      processingMsg.classList.remove('hidden');
+      errorMsg.classList.add('hidden');
+      resultsSection.classList.add('hidden');
+      infoBox.classList.remove('hidden');
+
+      try {
+        const data = await file.arrayBuffer();
+        const workbook = XLSX.read(data);
+        
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        
+        const rawJson = XLSX.utils.sheet_to_json(worksheet, { 
+          defval: '',
+          raw: false,
+          header: 1
+        });
+        
+        if (rawJson.length === 0) {
+          throw new Error('Le fichier Excel est vide');
+        }
+
+        let headerRow = 0;
+        let maxValues = 0;
+        
+        for (let i = 0; i < Math.min(10, rawJson.length); i++) {
+          const nonEmptyCount = rawJson[i].filter(cell => cell && cell.toString().trim() !== '').length;
+          if (nonEmptyCount > maxValues) {
+            maxValues = nonEmptyCount;
+            headerRow = i;
+          }
+        }
+        
+        const headers = rawJson[headerRow].map((h, idx) => {
+          const header = h && h.toString().trim() !== '' ? h.toString().trim() : `Colonne_${idx + 1}`;
+          return header;
+        });
+        
+        const cleanedJson = [];
+        
+        for (let i = headerRow + 1; i < rawJson.length; i++) {
+          const row = rawJson[i];
+          const hasData = row.some(cell => cell && cell.toString().trim() !== '');
+          if (!hasData) continue;
+          
+          const rowObj = {};
+          headers.forEach((header, idx) => {
+            const value = row[idx];
+            rowObj[header] = (value !== undefined && value !== null && value !== '') ? value : null;
+          });
+          
+          cleanedJson.push(rowObj);
+        }
+
+        if (cleanedJson.length === 0) {
+          throw new Error('Aucune donnée trouvée après l\'en-tête');
+        }
+
+        jsonData = cleanedJson;
+        displayResults(cleanedJson, headerRow);
+        processingMsg.classList.add('hidden');
+      } catch (err) {
+        errorText.textContent = `Erreur: ${err.message}`;
+        errorMsg.classList.remove('hidden');
+        processingMsg.classList.add('hidden');
+      }
+    }
+
+    function displayResults(data, headerRow) {
+      resultsSection.classList.remove('hidden');
+      infoBox.classList.add('hidden');
+
+      document.getElementById('headerInfo').textContent = `En-tête détecté à la ligne ${headerRow + 1}`;
+      document.getElementById('rowCount').textContent = data.length;
+      document.getElementById('colCount').textContent = Object.keys(data[0] || {}).length;
+      
+      const columns = Object.keys(data[0] || {});
+      document.getElementById('columnsTitle').textContent = `📋 Colonnes détectées (${columns.length}) :`;
+      document.getElementById('columnsList').innerHTML = columns.map(key => 
+        `<span class="text-xs bg-white text-indigo-700 px-3 py-1.5 rounded-full border border-indigo-200 font-medium">${key}</span>`
+      ).join('');
+
+      document.getElementById('previewJson').textContent = JSON.stringify(data[0], null, 2);
+      document.getElementById('fullJson').textContent = JSON.stringify(data, null, 2);
+      document.getElementById('jsonFileName').textContent = fileName.replace(/\.(xlsx|xls)$/i, '.json');
+    }
+
+    function copyToClipboard() {
+      if (!jsonData) return;
+      
+      const jsonStr = JSON.stringify(jsonData, null, 2);
+      navigator.clipboard.writeText(jsonStr).then(() => {
+        alert('✅ JSON copié !');
+      });
+    }
+
+    function downloadJson() {
+      if (!jsonData) return;
+
+      const jsonStr = JSON.stringify(jsonData, null, 2);
+      const blob = new Blob([jsonStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName.replace(/\.(xlsx|xls)$/i, '.json');
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+  </script>
+</body>
+</html>

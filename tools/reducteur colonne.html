@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Réducteur de Colonnes JSON</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-100 p-8">
+  <div class="max-w-5xl mx-auto">
+    <!-- Header -->
+    <div class="text-center mb-8">
+      <h1 class="text-5xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-3">
+        🔧 Réducteur de Colonnes JSON
+      </h1>
+      <p class="text-gray-600 text-lg">Limitez vos fichiers JSON à 90 colonnes maximum pour MySQL</p>
+    </div>
+
+    <!-- Upload Section -->
+    <div class="bg-white rounded-2xl shadow-xl p-8 mb-6 border border-gray-200">
+      <div class="border-2 border-dashed border-indigo-300 rounded-xl p-10 text-center hover:border-indigo-500 hover:bg-indigo-50 transition-all cursor-pointer">
+        <input type="file" accept=".json" id="fileInput" class="hidden">
+        <label for="fileInput" class="cursor-pointer block">
+          <div class="text-7xl mb-4">📁</div>
+          <div class="text-xl font-bold text-gray-800 mb-2">
+            Sélectionnez votre fichier JSON
+          </div>
+          <div class="text-sm text-gray-500">
+            Le fichier sera réduit aux 90 dernières colonnes
+          </div>
+        </label>
+      </div>
+
+      <!-- Options -->
+      <div class="mt-6 bg-indigo-50 rounded-xl p-4 border border-indigo-200">
+        <label class="block text-sm font-bold text-indigo-900 mb-2">
+          📊 Nombre de colonnes à conserver (max 100)
+        </label>
+        <input 
+          type="number" 
+          id="maxColumns" 
+          value="90" 
+          min="10" 
+          max="100"
+          class="w-full px-4 py-2 rounded-lg border border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        >
+        <p class="text-xs text-indigo-700 mt-2">
+          ℹ️ Garde la 1ère colonne (GROUPES) + les N-1 dernières colonnes de dates
+        </p>
+      </div>
+
+      <div id="processingMsg" class="mt-6 text-center hidden">
+        <div class="inline-flex items-center gap-3 bg-indigo-100 text-indigo-700 px-6 py-3 rounded-full font-semibold">
+          <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-indigo-700"></div>
+          Traitement en cours...
+        </div>
+      </div>
+
+      <div id="errorMsg" class="mt-6 bg-red-50 border-l-4 border-red-500 rounded-lg p-4 hidden">
+        <div class="flex items-center gap-2 text-red-700 font-semibold">
+          <span class="text-2xl">❌</span>
+          <span id="errorText"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Results Section -->
+    <div id="resultsSection" class="bg-white rounded-2xl shadow-xl p-8 border border-gray-200 hidden">
+      <div class="flex items-center justify-between mb-6">
+        <div>
+          <h2 class="text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+            ✨ Fichier Réduit
+          </h2>
+          <p class="text-sm text-gray-500 mt-1" id="reductionInfo"></p>
+        </div>
+        <button
+          id="downloadBtn"
+          class="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-6 py-3 rounded-xl font-semibold transition-all shadow-lg hover:shadow-xl flex items-center gap-2"
+        >
+          <span class="text-xl">💾</span> Télécharger JSON
+        </button>
+      </div>
+
+      <!-- Stats -->
+      <div class="grid grid-cols-4 gap-4 mb-6">
+        <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4 border border-blue-200">
+          <div class="text-blue-600 text-sm font-semibold mb-1">📊 Objets</div>
+          <div class="text-3xl font-bold text-blue-900" id="objectCount">0</div>
+        </div>
+        <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-4 border border-purple-200">
+          <div class="text-purple-600 text-sm font-semibold mb-1">📝 Colonnes</div>
+          <div class="text-3xl font-bold text-purple-900" id="columnCount">0</div>
+        </div>
+        <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-4 border border-green-200">
+          <div class="text-green-600 text-sm font-semibold mb-1">📅 Début</div>
+          <div class="text-lg font-bold text-green-900" id="startDate">-</div>
+        </div>
+        <div class="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-4 border border-orange-200">
+          <div class="text-orange-600 text-sm font-semibold mb-1">📅 Fin</div>
+          <div class="text-lg font-bold text-orange-900" id="endDate">-</div>
+        </div>
+      </div>
+
+      <!-- Preview -->
+      <div class="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-5 border border-indigo-200 mb-6">
+        <div class="text-sm font-bold text-indigo-900 mb-3 flex items-center gap-2">
+          <span class="text-xl">👁️</span>
+          Aperçu du premier objet :
+        </div>
+        <pre class="text-xs text-indigo-800 overflow-x-auto bg-white p-4 rounded-lg border border-indigo-100 max-h-60" id="previewJson"></pre>
+      </div>
+
+      <!-- Colonnes conservées -->
+      <div class="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl p-4 border border-blue-200">
+        <div class="text-sm font-bold text-blue-900 mb-3" id="columnsTitle"></div>
+        <div class="flex flex-wrap gap-2 max-h-40 overflow-y-auto" id="columnsList"></div>
+      </div>
+    </div>
+
+    <!-- Info Box -->
+    <div class="bg-white rounded-2xl shadow-xl p-8 border border-gray-200 mt-6">
+      <h3 class="font-bold text-gray-800 mb-4 text-xl flex items-center gap-2">
+        <span class="text-2xl">💡</span>
+        Comment ça marche ?
+      </h3>
+      
+      <div class="space-y-3">
+        <div class="flex items-start gap-3">
+          <span class="bg-indigo-500 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold flex-shrink-0">1</span>
+          <div>
+            <div class="font-semibold text-gray-900">Sélectionnez votre fichier JSON</div>
+            <div class="text-sm text-gray-600">Avec de nombreuses colonnes mensuelles</div>
+          </div>
+        </div>
+        <div class="flex items-start gap-3">
+          <span class="bg-indigo-500 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold flex-shrink-0">2</span>
+          <div>
+            <div class="font-semibold text-gray-900">Le script garde automatiquement</div>
+            <div class="text-sm text-gray-600">La colonne GROUPES + les 89 dernières colonnes de dates (les plus récentes)</div>
+          </div>
+        </div>
+        <div class="flex items-start gap-3">
+          <span class="bg-indigo-500 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold flex-shrink-0">3</span>
+          <div>
+            <div class="font-semibold text-gray-900">Téléchargez le fichier réduit</div>
+            <div class="text-sm text-gray-600">Prêt pour MySQL sans dépasser la limite de colonnes !</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let reducedData = null;
+    let originalFileName = '';
+
+    const fileInput = document.getElementById('fileInput');
+    const maxColumnsInput = document.getElementById('maxColumns');
+    const processingMsg = document.getElementById('processingMsg');
+    const errorMsg = document.getElementById('errorMsg');
+    const errorText = document.getElementById('errorText');
+    const resultsSection = document.getElementById('resultsSection');
+    const downloadBtn = document.getElementById('downloadBtn');
+
+    fileInput.addEventListener('change', handleFileUpload);
+    downloadBtn.addEventListener('click', downloadJson);
+
+    async function handleFileUpload(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      originalFileName = file.name;
+      processingMsg.classList.remove('hidden');
+      errorMsg.classList.add('hidden');
+      resultsSection.classList.add('hidden');
+
+      try {
+        const text = await file.text();
+        const data = JSON.parse(text);
+
+        if (!Array.isArray(data) || data.length === 0) {
+          throw new Error('Le fichier doit contenir un tableau d\'objets');
+        }
+
+        const maxColumns = parseInt(maxColumnsInput.value) || 90;
+        reducedData = reduceColumns(data, maxColumns);
+
+        displayResults(reducedData, data[0]);
+        processingMsg.classList.add('hidden');
+        resultsSection.classList.remove('hidden');
+
+      } catch (err) {
+        errorText.textContent = `Erreur: ${err.message}`;
+        errorMsg.classList.remove('hidden');
+        processingMsg.classList.add('hidden');
+      }
+    }
+
+    function reduceColumns(data, maxColumns) {
+      const result = [];
+
+      for (const item of data) {
+        const allKeys = Object.keys(item);
+        
+        let keysToKeep;
+        if (allKeys.length > maxColumns) {
+          // Garder la première clé + les (maxColumns - 1) dernières
+          keysToKeep = [allKeys[0], ...allKeys.slice(-(maxColumns - 1))];
+        } else {
+          keysToKeep = allKeys;
+        }
+
+        const newItem = {};
+        for (const key of keysToKeep) {
+          newItem[key] = item[key];
+        }
+        result.push(newItem);
+      }
+
+      return result;
+    }
+
+    function displayResults(data, originalFirstItem) {
+      const firstItem = data[0];
+      const keys = Object.keys(firstItem);
+      const originalKeys = Object.keys(originalFirstItem);
+
+      document.getElementById('reductionInfo').textContent = 
+        `${originalKeys.length} colonnes → ${keys.length} colonnes`;
+      
+      document.getElementById('objectCount').textContent = data.length;
+      document.getElementById('columnCount').textContent = keys.length;
+      document.getElementById('startDate').textContent = keys[1] || '-';
+      document.getElementById('endDate').textContent = keys[keys.length - 1] || '-';
+
+      document.getElementById('previewJson').textContent = JSON.stringify(firstItem, null, 2);
+
+      document.getElementById('columnsTitle').textContent = 
+        `📋 Colonnes conservées (${keys.length}) :`;
+      
+      document.getElementById('columnsList').innerHTML = keys.map(key => 
+        `<span class="text-xs bg-white text-indigo-700 px-3 py-1.5 rounded-full border border-indigo-200 font-medium">${key}</span>`
+      ).join('');
+    }
+
+    function downloadJson() {
+      if (!reducedData) return;
+
+      const jsonStr = JSON.stringify(reducedData, null, 2);
+      const blob = new Blob([jsonStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = originalFileName.replace('.json', '-reduced.json');
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+  </script>
+</body>
+</html>

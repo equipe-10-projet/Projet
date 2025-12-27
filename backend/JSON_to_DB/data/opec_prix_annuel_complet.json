@@ -1,0 +1,163 @@
+[
+  {
+    "annee": 2003,
+    "prix_moyen": 28.12,
+    "prix_min": 23.27,
+    "prix_max": 33.11,
+    "nb_jours": 257
+  },
+  {
+    "annee": 2004,
+    "prix_moyen": 36.01,
+    "prix_min": 28.09,
+    "prix_max": 46.61,
+    "nb_jours": 260
+  },
+  {
+    "annee": 2005,
+    "prix_moyen": 50.71,
+    "prix_min": 35.67,
+    "prix_max": 61.37,
+    "nb_jours": 258
+  },
+  {
+    "annee": 2006,
+    "prix_moyen": 61.08,
+    "prix_min": 53.37,
+    "prix_max": 72.68,
+    "nb_jours": 257
+  },
+  {
+    "annee": 2007,
+    "prix_moyen": 69.08,
+    "prix_min": 47.97,
+    "prix_max": 91.77,
+    "nb_jours": 258
+  },
+  {
+    "annee": 2008,
+    "prix_moyen": 94.45,
+    "prix_min": 33.36,
+    "prix_max": 140.73,
+    "nb_jours": 258
+  },
+  {
+    "annee": 2009,
+    "prix_moyen": 61.06,
+    "prix_min": 38.1,
+    "prix_max": 77.88,
+    "nb_jours": 258
+  },
+  {
+    "annee": 2010,
+    "prix_moyen": 77.45,
+    "prix_min": 66.84,
+    "prix_max": 90.73,
+    "nb_jours": 259
+  },
+  {
+    "annee": 2011,
+    "prix_moyen": 107.46,
+    "prix_min": 89.81,
+    "prix_max": 120.91,
+    "nb_jours": 258
+  },
+  {
+    "annee": 2012,
+    "prix_moyen": 109.45,
+    "prix_min": 88.74,
+    "prix_max": 124.64,
+    "nb_jours": 258
+  },
+  {
+    "annee": 2013,
+    "prix_moyen": 105.87,
+    "prix_min": 96.35,
+    "prix_max": 114.94,
+    "nb_jours": 257
+  },
+  {
+    "annee": 2014,
+    "prix_moyen": 96.29,
+    "prix_min": 52.0,
+    "prix_max": 110.48,
+    "nb_jours": 257
+  },
+  {
+    "annee": 2015,
+    "prix_moyen": 49.49,
+    "prix_min": 30.74,
+    "prix_max": 64.96,
+    "nb_jours": 258
+  },
+  {
+    "annee": 2016,
+    "prix_moyen": 40.76,
+    "prix_min": 22.48,
+    "prix_max": 53.46,
+    "nb_jours": 259
+  },
+  {
+    "annee": 2017,
+    "prix_moyen": 52.43,
+    "prix_min": 42.58,
+    "prix_max": 64.47,
+    "nb_jours": 257
+  },
+  {
+    "annee": 2018,
+    "prix_moyen": 69.78,
+    "prix_min": 50.11,
+    "prix_max": 84.09,
+    "nb_jours": 256
+  },
+  {
+    "annee": 2019,
+    "prix_moyen": 64.04,
+    "prix_min": 52.14,
+    "prix_max": 74.04,
+    "nb_jours": 258
+  },
+  {
+    "annee": 2020,
+    "prix_moyen": 41.47,
+    "prix_min": 12.22,
+    "prix_max": 70.87,
+    "nb_jours": 258
+  },
+  {
+    "annee": 2021,
+    "prix_moyen": 69.89,
+    "prix_min": 50.75,
+    "prix_max": 84.66,
+    "nb_jours": 259
+  },
+  {
+    "annee": 2022,
+    "prix_moyen": 100.08,
+    "prix_min": 74.66,
+    "prix_max": 128.27,
+    "nb_jours": 258
+  },
+  {
+    "annee": 2023,
+    "prix_moyen": 82.95,
+    "prix_min": 70.77,
+    "prix_max": 97.48,
+    "nb_jours": 257
+  },
+  {
+    "annee": 2024,
+    "prix_moyen": 79.89,
+    "prix_min": 70.79,
+    "prix_max": 91.11,
+    "nb_jours": 259
+  },
+  {
+    "annee": 2025,
+    "prix_moyen": 69.73,
+    "prix_min": 59.54,
+    "prix_max": 83.07,
+    "nb_jours": 252
+  }
+]

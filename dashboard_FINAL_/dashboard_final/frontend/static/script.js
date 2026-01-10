@@ -500,7 +500,7 @@
                         .pop();
                     
 const groupedData = {};
-const groupedCounts = {};  // 🆕 Compteur pour moyenne
+const groupedCounts = {};  //  Compteur pour moyenne
 
     pibSecteurs.forEach(row => {
     if (row.secteur && !row.secteur.includes('Produit Intérieur Brut')) {
@@ -509,10 +509,10 @@ const groupedCounts = {};  // 🆕 Compteur pour moyenne
         
         if (!groupedData[category]) {
             groupedData[category] = 0;
-            groupedCounts[category] = 0;  // 🆕 Initialiser compteur
+            groupedCounts[category] = 0;  //  Initialiser compteur
         }
         groupedData[category] += value;
-        groupedCounts[category]++;  // 🆕 Incrémenter compteur
+        groupedCounts[category]++;  //  Incrémenter compteur
     }
 });
 
@@ -569,7 +569,7 @@ Object.keys(groupedData).forEach(category => {
                     
                     const datasets = yearCols.map((col, idx) => {
     const yearGroupedData = {};
-    const yearGroupedCounts = {};  // 🆕 Compteur pour moyenne
+    const yearGroupedCounts = {};  //  Compteur pour moyenne
     
     pibSecteurs.forEach(row => {
         if (row.secteur && !row.secteur.includes('Produit Intérieur Brut')) {
@@ -578,10 +578,10 @@ Object.keys(groupedData).forEach(category => {
             
             if (!yearGroupedData[category]) {
                 yearGroupedData[category] = 0;
-                yearGroupedCounts[category] = 0;  // 🆕 Initialiser compteur
+                yearGroupedCounts[category] = 0;  //  Initialiser compteur
             }
             yearGroupedData[category] += value;
-            yearGroupedCounts[category]++;  // 🆕 Incrémenter compteur
+            yearGroupedCounts[category]++;  //  Incrémenter compteur
         }
     });
     
@@ -1251,3 +1251,4 @@ Object.keys(groupedData).forEach(category => {
                     ' Erreur. Vérifiez que le backend est lancé.';
             }
         });
+

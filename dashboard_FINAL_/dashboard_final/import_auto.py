@@ -28,9 +28,9 @@ def import_data():
         )
         cursor = conn.cursor()
         cursor.execute("DROP DATABASE IF EXISTS economic_dashboard")
-        print("✓ Ancienne base supprimée")
+        print(" Ancienne base supprimée")
         cursor.execute("CREATE DATABASE economic_dashboard")
-        print("✓ Nouvelle base créée")
+        print(" Nouvelle base créée")
         cursor.close()
         conn.close()
     except Exception as e:
@@ -65,7 +65,7 @@ def import_data():
                     "INSERT INTO inflation (annee, valeur) VALUES (%s, %s)",
                     (year, ipc_global[str(year)])
                 )
-        print("✓ Inflation")
+        print(" Inflation")
         
         # OPEC
         with open('data/opec_prix_annuel_complet.json', 'r', encoding='utf-8') as f:
@@ -85,7 +85,7 @@ def import_data():
                 "INSERT INTO opec (annee, valeur) VALUES (%s, %s)",
                 (row['annee'], row['prix_moyen'])
             )
-        print("✓ OPEC")
+        print(" OPEC")
         
         # PIB
         with open('data/pib_data.json', 'r', encoding='utf-8') as f:
@@ -108,7 +108,7 @@ def import_data():
                     "INSERT INTO croissance_pib (annee, valeur) VALUES (%s, %s)",
                     (year, float(pib_global[str(year)]))
                 )
-        print("✓ PIB")
+        print(" PIB")
         
         # PIB SECTEURS
         cursor.execute("DROP TABLE IF EXISTS pib_secteurs")
@@ -133,7 +133,7 @@ def import_data():
                 f"INSERT INTO pib_secteurs (secteur, {', '.join([f'annee_{y}' for y in annees])}) VALUES ({placeholders})",
                 [secteur_name] + valeurs
             )
-        print("✓ Secteurs")
+        print(" Secteurs")
         
         conn.commit()
         cursor.close()
